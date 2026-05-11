@@ -47,7 +47,7 @@ function Landing() {
           <img src={logo} alt="Penny-eTracker" className="h-10 w-10" />
           <span className="text-lg font-semibold tracking-tight">Penny-eTracker</span>
         </Link>
-        <Button size="sm">Get Started</Button>
+        <Button size="sm" asChild><Link to="/auth">Get Started</Link></Button>
       </header>
 
       <section className="mx-auto max-w-4xl px-6 pb-12 pt-8 text-center sm:pt-16">

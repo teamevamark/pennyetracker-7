@@ -14,16 +14,232 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      delivery_staff: {
+        Row: {
+          created_at: string
+          email: string | null
+          full_name: string
+          id: string
+          license_number: string | null
+          phone: string
+          status: string
+          updated_at: string
+          user_id: string | null
+          vehicle_number: string | null
+          ward_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          full_name: string
+          id?: string
+          license_number?: string | null
+          phone: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+          vehicle_number?: string | null
+          ward_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          full_name?: string
+          id?: string
+          license_number?: string | null
+          phone?: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+          vehicle_number?: string | null
+          ward_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delivery_staff_ward_id_fkey"
+            columns: ["ward_id"]
+            isOneToOne: false
+            referencedRelation: "wards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      districts: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          state_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          state_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          state_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "districts_state_id_fkey"
+            columns: ["state_id"]
+            isOneToOne: false
+            referencedRelation: "states"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      panchayaths: {
+        Row: {
+          created_at: string
+          district_id: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          district_id: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          district_id?: string
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "panchayaths_district_id_fkey"
+            columns: ["district_id"]
+            isOneToOne: false
+            referencedRelation: "districts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      states: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      wards: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          panchayath_id: string
+          ward_number: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          panchayath_id: string
+          ward_number?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          panchayath_id?: string
+          ward_number?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wards_panchayath_id_fkey"
+            columns: ["panchayath_id"]
+            isOneToOne: false
+            referencedRelation: "panchayaths"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_admin: { Args: { _user_id: string }; Returns: boolean }
+      promote_to_super_admin: { Args: { _email: string }; Returns: undefined }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "super_admin" | "admin" | "delivery"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +366,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["super_admin", "admin", "delivery"],
+    },
   },
 } as const
