@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import logo from "@/assets/logo.png";
 
@@ -14,11 +14,16 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   const [done, setDone] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const t = setTimeout(() => setDone(true), 2800);
-    return () => clearTimeout(t);
-  }, []);
+    const nav = setTimeout(() => navigate({ to: "/landing" }), 3600);
+    return () => {
+      clearTimeout(t);
+      clearTimeout(nav);
+    };
+  }, [navigate]);
 
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-b from-[oklch(0.98_0.01_240)] via-background to-[oklch(0.95_0.03_250)]">
