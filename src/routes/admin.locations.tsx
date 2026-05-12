@@ -44,6 +44,7 @@ function Locations() {
           parentId={districtId}
           selectedId={panchayathId}
           onSelect={setPanchayathId}
+          extraField={{ key: "ward_count", label: "Ward count (e.g. 25)", type: "number" }}
         />
         <Column
           title="Wards"
@@ -68,7 +69,7 @@ function Column({
   parentId: string | null;
   selectedId: string | null;
   onSelect: (id: string) => void;
-  extraField?: { key: string; label: string };
+  extraField?: { key: string; label: string; type?: string };
 }) {
   const qc = useQueryClient();
   const [name, setName] = useState("");
@@ -78,7 +79,7 @@ function Column({
   const { data = [] } = useQuery({
     queryKey: [table, parentId],
     queryFn: async () => {
-      let q = supabase.from(table).select("*").order("name");
+      let q = supabase.from(table).select("*").order(table === "wards" ? "ward_number" : "name");
       if (parentField && parentId) q = q.eq(parentField, parentId);
       const { data, error } = await q;
       if (error) throw error;
@@ -89,13 +90,35 @@ function Column({
 
   const add = useMutation({
     mutationFn: async () => {
+      // Special case: creating a panchayath also seeds wards 1..N
+      if (table === "panchayaths") {
+        const count = Math.max(0, Math.min(500, parseInt(extra || "0", 10) || 0));
+        const payload: any = { name };
+        if (parentField && parentId) payload[parentField] = parentId;
+        const { data: pan, error } = await supabase.from("panchayaths").insert(payload).select("id").single();
+        if (error) throw error;
+        if (count > 0 && pan?.id) {
+          const wards = Array.from({ length: count }, (_, i) => ({
+            panchayath_id: pan.id,
+            name: `Ward ${i + 1}`,
+            ward_number: String(i + 1),
+          }));
+          const { error: wErr } = await supabase.from("wards").insert(wards);
+          if (wErr) throw wErr;
+        }
+        return;
+      }
       const payload: any = { name };
       if (parentField && parentId) payload[parentField] = parentId;
       if (extraField && extra) payload[extraField.key] = extra;
       const { error } = await supabase.from(table).insert(payload);
       if (error) throw error;
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: [table, parentId] }); setName(""); setExtra(""); toast.success("Added"); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: [table, parentId] });
+      if (table === "panchayaths") qc.invalidateQueries({ queryKey: ["wards"] });
+      setName(""); setExtra(""); toast.success("Added");
+    },
     onError: (e: any) => toast.error(e.message),
   });
 
@@ -115,7 +138,7 @@ function Column({
         {enabled && (
           <div className="space-y-2">
             <Input placeholder={`New ${title.slice(0, -1).toLowerCase()}`} value={name} onChange={(e) => setName(e.target.value)} />
-            {extraField && <Input placeholder={extraField.label} value={extra} onChange={(e) => setExtra(e.target.value)} />}
+            {extraField && <Input type={extraField.type ?? "text"} placeholder={extraField.label} value={extra} onChange={(e) => setExtra(e.target.value)} />}
             <Button size="sm" className="w-full" onClick={() => add.mutate()} disabled={!name || add.isPending}>
               <Plus className="h-3.5 w-3.5" /> Add
             </Button>
