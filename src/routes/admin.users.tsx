@@ -20,7 +20,7 @@ const ROLES: Role[] = ["super_admin", "admin", "delivery"];
 function UsersPage() {
   const qc = useQueryClient();
   const { isSuperAdmin } = useAuth();
-  const createUserFn = useServerFn(createAdminUser);
+  
 
   const [form, setForm] = useState({ full_name: "", phone: "", password: "", role: "admin" as "admin" | "delivery" });
 
