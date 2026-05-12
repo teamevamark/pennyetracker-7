@@ -1,9 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { createAdminUser } from "@/lib/admin-users.functions";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -22,7 +20,7 @@ const ROLES: Role[] = ["super_admin", "admin", "delivery"];
 function UsersPage() {
   const qc = useQueryClient();
   const { isSuperAdmin } = useAuth();
-  const createUserFn = useServerFn(createAdminUser);
+  
 
   const [form, setForm] = useState({ full_name: "", phone: "", password: "", role: "admin" as "admin" | "delivery" });
 
@@ -55,7 +53,12 @@ function UsersPage() {
   });
 
   const create = useMutation({
-    mutationFn: async () => createUserFn({ data: form }),
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke("create-admin-user", { body: form });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      return data;
+    },
     onSuccess: () => {
       toast.success("User created");
       setForm({ full_name: "", phone: "", password: "", role: "admin" });
