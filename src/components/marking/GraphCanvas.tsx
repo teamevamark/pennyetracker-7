@@ -104,11 +104,13 @@ export function GraphCanvas({ cfg }: { cfg: GraphConfig }) {
   const [search, setSearch] = useState("");
   const [dialog, setDialog] = useState<{ kind: "add" | "connect" | "create"; dir?: Direction } | null>(null);
 
-  // All nodes (for search and existing selection)
+  // All nodes (for search and existing selection), optionally scoped to a parent
   const { data: allNodes = [] } = useQuery({
-    queryKey: [cfg.nodesTable, "all"],
+    queryKey: [cfg.nodesTable, "all", cfg.parentFilter?.column, cfg.parentFilter?.value],
     queryFn: async () => {
-      const { data, error } = await supabase.from(cfg.nodesTable).select("*").order("name");
+      let q = supabase.from(cfg.nodesTable).select("*").order("name");
+      if (cfg.parentFilter) q = q.eq(cfg.parentFilter.column, cfg.parentFilter.value);
+      const { data, error } = await q;
       if (error) throw error;
       return data as any[];
     },
