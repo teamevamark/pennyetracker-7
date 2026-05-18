@@ -225,15 +225,27 @@ export function MapPicker({ kind, apiKey, parents, parentId, onParentChange, par
 
   if (!apiKey) {
     return (
-      <Card>
-        <CardContent className="py-10 text-center">
-          <MapPin className="mx-auto h-10 w-10 text-muted-foreground" />
-          <h2 className="mt-3 text-lg font-semibold">Add your Google Maps API key</h2>
-          <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
-            Go to Admin → Settings and paste a Google Maps JavaScript API key. We recommend restricting the key by HTTP referrer in Google Cloud Console.
-          </p>
-        </CardContent>
-      </Card>
+      <FallbackPicker
+        kind={kind}
+        parents={parents}
+        parentId={parentId}
+        onParentChange={onParentChange}
+        parentLabel={parentLabel}
+        reason="Google Maps API key is not configured. Ask an admin to set it in Settings, or use the GPS fallback below."
+      />
+    );
+  }
+
+  if (mapState === "error") {
+    return (
+      <FallbackPicker
+        kind={kind}
+        parents={parents}
+        parentId={parentId}
+        onParentChange={onParentChange}
+        parentLabel={parentLabel}
+        reason="Google Maps failed to load (invalid key, API disabled, or network blocked). Falling back to browser GPS."
+      />
     );
   }
 
