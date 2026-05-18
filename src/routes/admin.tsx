@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { LayoutDashboard, Users, MapPin, Map, Settings, ShieldCheck, LogOut, Menu } from "lucide-react";
+import { LayoutDashboard, Users, MapPin, Map as MapIcon, Settings, ShieldCheck, LogOut, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin")({
@@ -15,7 +15,7 @@ const nav = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { to: "/admin/staff", label: "Delivery Staff", icon: Users },
   { to: "/admin/locations", label: "Locations", icon: MapPin },
-  { to: "/admin/mapping", label: "Mapping", icon: Map },
+  { to: "/admin/mapping", label: "Mapping", icon: MapIcon },
   { to: "/admin/settings", label: "Settings", icon: Settings },
   { to: "/admin/users", label: "Roles", icon: ShieldCheck, superOnly: true },
 ];
