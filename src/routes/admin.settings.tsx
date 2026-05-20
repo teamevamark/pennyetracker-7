@@ -11,6 +11,7 @@ import { Save, ExternalLink, Upload, Trash2, MapIcon } from "lucide-react";
 import { GOOGLE_MAPS_KEY_NAME, useGoogleMapsKey } from "@/hooks/use-google-maps-key";
 import { useQuery } from "@tanstack/react-query";
 import { clearCachedMbtiles } from "@/lib/mbtilesCache";
+import { useGoogleMaps } from "@/components/map/useGoogleMaps";
 
 export const Route = createFileRoute("/admin/settings")({
   component: SettingsPage,
@@ -92,9 +93,59 @@ function SettingsPage() {
           <Button onClick={() => save.mutate()} disabled={save.isPending}>
             <Save className="h-4 w-4" /> {save.isPending ? "Saving…" : "Save"}
           </Button>
+          <EmbeddedMapPreview apiKey={value.trim() || existingKey || ""} />
         </CardContent>
       </Card>
       <OfflineMbtilesCard />
+    </div>
+  );
+}
+
+function EmbeddedMapPreview({ apiKey }: { apiKey: string }) {
+  const state = useGoogleMaps(apiKey || null);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (state !== "ready" || !ref.current) return;
+    const g = (window as any).google;
+    if (!g?.maps) return;
+    const map = new g.maps.Map(ref.current, {
+      center: { lat: 10.8505, lng: 76.2711 }, // Kerala
+      zoom: 8,
+      mapTypeControl: true,
+      streetViewControl: false,
+      fullscreenControl: true,
+    });
+    new g.maps.Marker({ position: { lat: 10.8505, lng: 76.2711 }, map, title: "Kerala" });
+  }, [state]);
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <Label>Live map preview</Label>
+        <span className="text-xs text-muted-foreground">
+          {!apiKey
+            ? "Enter a key to preview"
+            : state === "loading"
+              ? "Loading…"
+              : state === "ready"
+                ? "Key works ✓"
+                : state === "error"
+                  ? "Key failed — check restrictions/billing"
+                  : ""}
+        </span>
+      </div>
+      <div className="relative h-72 w-full overflow-hidden rounded-md border bg-muted">
+        {apiKey && state !== "error" ? (
+          <div ref={ref} className="h-full w-full" />
+        ) : (
+          <div className="flex h-full items-center justify-center p-4 text-center text-sm text-muted-foreground">
+            {state === "error"
+              ? "Google Maps failed to load with this key."
+              : "Save a Google Maps API key to see the embedded preview."}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
