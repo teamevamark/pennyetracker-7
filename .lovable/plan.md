@@ -1,40 +1,59 @@
-## Goal
+## Offline MBTiles map upload — Admin Settings
 
-Turn `/map/panchayath` into a multi-view public map with tabs. The current pin-map view stays as the default; two new views are added per your request.
+Add an offline-map upload to Admin → Settings. When uploaded, the app falls back to this map whenever the Google Maps API key is missing or the network is offline. Otherwise Google Maps continues to be used as today.
 
-> Note: you mentioned "three features" but listed only two. I'll plan with the two below. If there's a third, tell me and I'll add it.
+### What the user gets
 
-## Tabs on `/map/panchayath`
+- **Admin → Settings**: a new "Offline map (MBTiles)" section under the Google Maps API key card.
+  - Upload `.mbtiles` file (drag-drop + file picker), shows current file name, size, uploaded date.
+  - "Replace" and "Remove" buttons.
+  - Help text explaining: used as fallback when Google Maps key is missing or device is offline.
+- **All map views** (`/map/panchayath`, `/admin/mapping/panchayath`, `/admin/mapping/ward`):
+  - If Google Maps key + network OK → Google Maps (unchanged).
+  - Else → Leaflet renders the uploaded MBTiles, with the same panchayath / ward markers on top.
+  - First view of the offline map downloads the `.mbtiles` once and caches it in IndexedDB; subsequent views work fully offline.
 
-```
-[ Pin map ] [ Connections ] [ Delivery staff ]
-```
+### Technical sketch
 
-### Tab 1 — Pin map (unchanged)
-Current Google-Map view with all marked panchayath pins.
+**Storage**
+- Supabase Storage bucket `offline-maps` (private). Admin-only RLS via `is_admin(auth.uid())` for insert/update/delete; signed URLs for read.
+- New table `app_settings` row `key = 'offline_mbtiles'` storing `{ path, size, uploaded_at }` JSON in `value` (existing schema supports this — `value` is text, we'll JSON-stringify).
+- New SECURITY DEFINER function `get_public_offline_mbtiles_url()` returns a short-lived signed URL (or null) so anon/public map page can fetch it.
 
-### Tab 2 — Connections (panchayath → ward drill-down)
-Two sub-modes inside the tab:
+**Server function** (`src/lib/offline-map.functions.ts`)
+- `getOfflineMbtilesSignedUrl()` — calls `supabaseAdmin.storage.from('offline-maps').createSignedUrl(path, 3600)`; returns `{ url, size, uploaded_at } | null`.
+- Admin upload uses browser client directly (admin-only via RLS on bucket).
 
-- **Panchayath level** (default): N/S/E/W graph using existing `GraphCanvas` with `panchayaths` / `panchayath_connections`. **Read-only** for public visitors — hide the "New", "Add", "Connect existing" actions; clicking a connected neighbour re-centers, same as today.
-- **Click center panchayath → Ward level**: switches the same canvas to `wards` / `ward_connections` scoped to that panchayath (`filter: { key: "panchayath_id", value: <id> }`). A breadcrumb `Panchayaths / <Name> wards` with a Back button returns to panchayath level.
+**Client cache** (`src/lib/mbtilesCache.ts`)
+- IndexedDB key `offline_mbtiles_v1` stores `{ uploaded_at, blob }`.
+- On map fallback: read cache; if `uploaded_at` matches latest server value, use cached blob; else download from signed URL and overwrite cache.
 
-### Tab 3 — Delivery staff
-Same panchayath N/S/E/W graph, but each panchayath card shows the count of active delivery staff assigned to it (from `delivery_staff_panchayaths` + `delivery_staff` where `status='active'`). Clicking the center panchayath opens a side panel listing the staff (name, phone, assigned wards) — reusing the data shape from `get_public_delivery_partners`.
+**Map rendering** (`src/components/map/OfflineMap.tsx`)
+- Install `leaflet`, `@types/leaflet`, and `sql.js` (to read MBTiles tile blobs in-browser).
+- Component opens the `.mbtiles` (SQLite) blob via `sql.js`, registers a custom Leaflet `TileLayer` whose `getTileUrl` returns `data:image/png;base64,...` from the `tiles` table.
+- Renders given `markers` prop (same shape as current Google map markers) using Leaflet markers.
 
-## Technical details
+**Fallback switch** (new hook `useMapMode.ts`)
+- Returns `'google' | 'offline' | 'none'`.
+- `'google'` when `useGoogleMapsKey()` returns a key AND `navigator.onLine` AND no prior Google JS load error.
+- `'offline'` when an offline mbtiles is configured AND (no key OR offline OR Google failed).
+- `'none'` otherwise (current empty-state UI).
+- Each map page renders Google component, `<OfflineMap>`, or the existing empty state based on this.
 
-- New file: `src/routes/map.panchayath.tsx` gets a `<Tabs>` wrapper; existing pin-map body moves into `TabsContent value="pin"`.
-- `GraphCanvas` gains a `readOnly?: boolean` prop. When true: hide "New", placeholder "Add"/"Connect existing" buttons, and skip mutations. Default false to keep `/admin/marking/*` and `/admin/mapping/*` unchanged.
-- New small component `PublicConnectionsView` wraps `GraphCanvas` and handles the panchayath→ward drill (local state `wardOfPanchayathId`).
-- New small component `PublicDeliveryView` wraps `GraphCanvas` in `readOnly`, fetches `get_public_delivery_partners`, and shows count badge on the centered card + side panel on click.
-- RLS: `panchayaths` and `wards` are `authenticated`-read only. To keep this public, add `anon` SELECT policies (read-only) for `panchayaths`, `wards`, `panchayath_connections`, `ward_connections` — OR keep the page authenticated. **Decision needed** (see below).
-- No DB schema changes; one optional RLS migration.
+### File changes
 
-## Out of scope
-- Editing connections from the public page (admin pages keep that).
-- Map-overlay polylines on Google Map (graph view only, matches existing marking UI).
-- `/map/panchayath`'s pin-map behaviour itself.
+- new: `src/components/map/OfflineMap.tsx`
+- new: `src/lib/mbtilesCache.ts`
+- new: `src/lib/offline-map.functions.ts`
+- new: `src/hooks/use-map-mode.ts`
+- edit: `src/routes/admin.settings.tsx` (add upload card)
+- edit: `src/routes/map.panchayath.tsx`, `src/routes/admin.mapping.panchayath.tsx`, `src/routes/admin.mapping.ward.tsx` (use `useMapMode` + render `<OfflineMap>` fallback)
+- edit: `src/components/map/MapPicker.tsx` (offline fallback shows read-only marker view; picking a new pin still requires Google or browser geolocation)
+- migration: create `offline-maps` storage bucket + RLS + `get_public_offline_mbtiles_url()` function
+- deps: `bun add leaflet @types/leaflet sql.js`
 
-## Open question
-Should the new Connections + Delivery tabs be publicly viewable (requires adding `anon` read RLS) or require login? Default in this plan: **public read-only** with RLS additions.
+### Notes / limits
+
+- Picking new pin coordinates by clicking the map still uses Google Maps; in offline mode the picker only supports the existing "Use my location" button. Stated explicitly in the UI.
+- MBTiles files can be large (50–500 MB typical for a district). First offline load downloads once; cached in IndexedDB afterwards. We'll warn admins in the upload UI.
+- `sql.js` ships a ~1 MB WASM file; loaded lazily only when offline map is needed.
