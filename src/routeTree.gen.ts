@@ -16,6 +16,9 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MarkingIndexRouteImport } from './routes/marking.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as StaffSignupRouteImport } from './routes/staff.signup'
+import { Route as StaffPendingRouteImport } from './routes/staff.pending'
+import { Route as StaffLoginRouteImport } from './routes/staff.login'
 import { Route as MarkingWardRouteImport } from './routes/marking.ward'
 import { Route as MarkingPanchayathRouteImport } from './routes/marking.panchayath'
 import { Route as MapPanchayathRouteImport } from './routes/map.panchayath'
@@ -62,6 +65,21 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AdminRoute,
+} as any)
+const StaffSignupRoute = StaffSignupRouteImport.update({
+  id: '/staff/signup',
+  path: '/staff/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StaffPendingRoute = StaffPendingRouteImport.update({
+  id: '/staff/pending',
+  path: '/staff/pending',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StaffLoginRoute = StaffLoginRouteImport.update({
+  id: '/staff/login',
+  path: '/staff/login',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const MarkingWardRoute = MarkingWardRouteImport.update({
   id: '/marking/ward',
@@ -133,6 +151,9 @@ export interface FileRoutesByFullPath {
   '/map/panchayath': typeof MapPanchayathRoute
   '/marking/panchayath': typeof MarkingPanchayathRoute
   '/marking/ward': typeof MarkingWardRoute
+  '/staff/login': typeof StaffLoginRoute
+  '/staff/pending': typeof StaffPendingRoute
+  '/staff/signup': typeof StaffSignupRoute
   '/admin/': typeof AdminIndexRoute
   '/marking/': typeof MarkingIndexRoute
   '/admin/mapping/panchayath': typeof AdminMappingPanchayathRoute
@@ -151,6 +172,9 @@ export interface FileRoutesByTo {
   '/map/panchayath': typeof MapPanchayathRoute
   '/marking/panchayath': typeof MarkingPanchayathRoute
   '/marking/ward': typeof MarkingWardRoute
+  '/staff/login': typeof StaffLoginRoute
+  '/staff/pending': typeof StaffPendingRoute
+  '/staff/signup': typeof StaffSignupRoute
   '/admin': typeof AdminIndexRoute
   '/marking': typeof MarkingIndexRoute
   '/admin/mapping/panchayath': typeof AdminMappingPanchayathRoute
@@ -172,6 +196,9 @@ export interface FileRoutesById {
   '/map/panchayath': typeof MapPanchayathRoute
   '/marking/panchayath': typeof MarkingPanchayathRoute
   '/marking/ward': typeof MarkingWardRoute
+  '/staff/login': typeof StaffLoginRoute
+  '/staff/pending': typeof StaffPendingRoute
+  '/staff/signup': typeof StaffSignupRoute
   '/admin/': typeof AdminIndexRoute
   '/marking/': typeof MarkingIndexRoute
   '/admin/mapping/panchayath': typeof AdminMappingPanchayathRoute
@@ -194,6 +221,9 @@ export interface FileRouteTypes {
     | '/map/panchayath'
     | '/marking/panchayath'
     | '/marking/ward'
+    | '/staff/login'
+    | '/staff/pending'
+    | '/staff/signup'
     | '/admin/'
     | '/marking/'
     | '/admin/mapping/panchayath'
@@ -212,6 +242,9 @@ export interface FileRouteTypes {
     | '/map/panchayath'
     | '/marking/panchayath'
     | '/marking/ward'
+    | '/staff/login'
+    | '/staff/pending'
+    | '/staff/signup'
     | '/admin'
     | '/marking'
     | '/admin/mapping/panchayath'
@@ -232,6 +265,9 @@ export interface FileRouteTypes {
     | '/map/panchayath'
     | '/marking/panchayath'
     | '/marking/ward'
+    | '/staff/login'
+    | '/staff/pending'
+    | '/staff/signup'
     | '/admin/'
     | '/marking/'
     | '/admin/mapping/panchayath'
@@ -248,6 +284,9 @@ export interface RootRouteChildren {
   MapPanchayathRoute: typeof MapPanchayathRoute
   MarkingPanchayathRoute: typeof MarkingPanchayathRoute
   MarkingWardRoute: typeof MarkingWardRoute
+  StaffLoginRoute: typeof StaffLoginRoute
+  StaffPendingRoute: typeof StaffPendingRoute
+  StaffSignupRoute: typeof StaffSignupRoute
   MarkingIndexRoute: typeof MarkingIndexRoute
 }
 
@@ -301,6 +340,27 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/staff/signup': {
+      id: '/staff/signup'
+      path: '/staff/signup'
+      fullPath: '/staff/signup'
+      preLoaderRoute: typeof StaffSignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/staff/pending': {
+      id: '/staff/pending'
+      path: '/staff/pending'
+      fullPath: '/staff/pending'
+      preLoaderRoute: typeof StaffPendingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/staff/login': {
+      id: '/staff/login'
+      path: '/staff/login'
+      fullPath: '/staff/login'
+      preLoaderRoute: typeof StaffLoginRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/marking/ward': {
       id: '/marking/ward'
@@ -427,6 +487,9 @@ const rootRouteChildren: RootRouteChildren = {
   MapPanchayathRoute: MapPanchayathRoute,
   MarkingPanchayathRoute: MarkingPanchayathRoute,
   MarkingWardRoute: MarkingWardRoute,
+  StaffLoginRoute: StaffLoginRoute,
+  StaffPendingRoute: StaffPendingRoute,
+  StaffSignupRoute: StaffSignupRoute,
   MarkingIndexRoute: MarkingIndexRoute,
 }
 export const routeTree = rootRouteImport

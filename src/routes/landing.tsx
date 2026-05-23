@@ -70,6 +70,9 @@ function Landing() {
             <Button size="sm" asChild>
               <Link to="/auth">Get Started</Link>
             </Button>
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/staff/login">Staff</Link>
+            </Button>
           </div>
         </div>
       </nav>
