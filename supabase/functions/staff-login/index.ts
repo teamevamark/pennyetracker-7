@@ -56,10 +56,14 @@ Deno.serve(async (req) => {
 });
 
 async function findUserByPhone(admin: ReturnType<typeof createClient>, phone: string) {
+  const wantDigits = phone.replace(/\D/g, "");
   for (let page = 1; page <= 10; page += 1) {
     const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 1000 });
     if (error) throw error;
-    const found = data.users.find((user) => user.phone === phone || user.user_metadata?.phone === phone);
+    const found = data.users.find((user) => {
+      const candidates = [user.phone, user.user_metadata?.phone].filter(Boolean) as string[];
+      return candidates.some((c) => c.replace(/\D/g, "") === wantDigits);
+    });
     if (found || data.users.length < 1000) return found ?? null;
   }
   return null;
