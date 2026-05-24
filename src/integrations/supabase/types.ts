@@ -425,6 +425,7 @@ export type Database = {
     Functions: {
       get_public_delivery_partners: { Args: never; Returns: Json }
       get_public_google_maps_key: { Args: never; Returns: string }
+      get_public_offline_mbtiles_meta: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
